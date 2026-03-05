@@ -1,0 +1,697 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Prize Draw</title>
+<link href="https://fonts.googleapis.com/css2?family=Amiko:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+body {
+  font-family: 'Amiko', sans-serif;
+  background: linear-gradient(135deg, #9f669f 0%, #7fbecf 60%, #83c6d8 100%);
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 1.5rem;
+  overflow: hidden;
+}
+
+/* ── Header ── */
+.header {
+  text-align: center;
+  margin-bottom: 1.2rem;
+  color: white;
+}
+.header h1 {
+  font-size: clamp(1.8rem, 5vw, 2.8rem);
+  font-weight: 700;
+  display: flex; align-items: center; justify-content: center; gap: 0.6rem;
+}
+.header p {
+  font-size: 0.95rem;
+  opacity: 0.85;
+  margin-top: 0.2rem;
+}
+
+/* ── Loading screen ── */
+#loadingScreen {
+  position: fixed; inset: 0;
+  background: linear-gradient(135deg, #9f669f 0%, #7fbecf 60%, #83c6d8 100%);
+  display: flex; flex-direction: column;
+  align-items: center; justify-content: center;
+  color: white; z-index: 100;
+  gap: 1rem;
+}
+#loadingScreen h2 { font-size: 1.4rem; font-weight: 700; }
+#loadingScreen p  { opacity: 0.8; font-size: 0.9rem; }
+.spinner-ring {
+  width: 52px; height: 52px;
+  border: 5px solid rgba(255,255,255,0.3);
+  border-top-color: white;
+  border-radius: 50%;
+  animation: spin-ring 0.85s linear infinite;
+}
+@keyframes spin-ring { to { transform: rotate(360deg); } }
+
+/* ── Main card ── */
+.card {
+  background: white;
+  border-radius: 1.2rem;
+  box-shadow: 0 24px 60px rgba(0,0,0,0.15);
+  padding: 2rem 2rem 1.5rem;
+  width: 100%;
+  max-width: 560px;
+}
+
+/* ── Stats bar ── */
+.stats-bar {
+  display: flex; align-items: center; justify-content: space-between;
+  margin-bottom: 1.2rem;
+}
+.stat-val { font-size: 2rem; font-weight: 700; color: #9f669f; line-height: 1; }
+.stat-lbl { font-size: 0.72rem; color: #6b7280; text-transform: uppercase; letter-spacing: 0.05em; }
+
+/* ── Wheel ── */
+.wheel-wrap {
+  position: relative;
+  max-width: 420px;
+  margin: 0 auto 1.4rem;
+}
+#wheelCanvas { width: 100%; height: auto; display: block; }
+
+/* ── Spin button ── */
+.btn-spin {
+  width: 100%;
+  padding: 1rem;
+  background: linear-gradient(135deg, #9f669f 0%, #6fc6d3 100%);
+  color: white;
+  border: none;
+  border-radius: 0.8rem;
+  font-family: 'Amiko', sans-serif;
+  font-size: 1.2rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  cursor: pointer;
+  box-shadow: 0 8px 20px rgba(159,102,159,0.35);
+  transition: all 0.18s;
+  display: flex; align-items: center; justify-content: center; gap: 0.5rem;
+}
+.btn-spin:hover   { transform: translateY(-2px); box-shadow: 0 14px 30px rgba(159,102,159,0.4); }
+.btn-spin:active  { transform: translateY(0); }
+.btn-spin:disabled { background: #d1d5db; box-shadow: none; cursor: not-allowed; transform: none; }
+
+.btn-refresh {
+  width: 100%;
+  margin-top: 0.6rem;
+  padding: 0.55rem;
+  background: rgba(111,198,211,0.12);
+  color: #9f669f;
+  border: none;
+  border-radius: 0.5rem;
+  font-family: 'Amiko', sans-serif;
+  font-size: 0.82rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.18s;
+  display: flex; align-items: center; justify-content: center; gap: 0.4rem;
+}
+.btn-refresh:hover { background: rgba(111,198,211,0.22); }
+
+/* ── Winner card ── */
+.winner-card {
+  border-radius: 1rem;
+  background: linear-gradient(135deg, #9f669f 0%, #6fc6d3 100%);
+  box-shadow: 0 16px 40px rgba(159,102,159,0.4);
+  padding: 2rem;
+  text-align: center;
+  margin-top: 1.5rem;
+  width: 100%;
+  max-width: 560px;
+  display: none;
+  animation: popIn 0.45s cubic-bezier(0.34,1.56,0.64,1);
+}
+.winner-card.show { display: block; }
+@keyframes popIn { from { transform: scale(0.8); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+
+.winner-icon  { font-size: 3.5rem; margin-bottom: 0.4rem; }
+.winner-title { font-size: 1.4rem; font-weight: 700; color: white; margin-bottom: 0.3rem; }
+.winner-name  {
+  font-size: clamp(2rem, 6vw, 3rem);
+  font-weight: 700; color: white;
+  line-height: 1.15; margin-bottom: 1.4rem;
+  word-break: break-word;
+}
+.winner-btns { display: flex; gap: 0.6rem; }
+.btn-winner {
+  flex: 1; padding: 0.7rem;
+  background: rgba(255,255,255,0.22);
+  border: 2px solid rgba(255,255,255,0.5);
+  color: white; border-radius: 0.5rem;
+  font-family: 'Amiko', sans-serif; font-size: 0.88rem; font-weight: 600;
+  cursor: pointer; transition: background 0.18s;
+}
+.btn-winner:hover { background: rgba(255,255,255,0.35); }
+.btn-winner.solid { background: white; color: #9f669f; border-color: white; }
+.btn-winner.solid:hover { background: #f0e8f4; }
+
+/* ── Admin panel (hidden cog) ── */
+.admin-toggle {
+  position: fixed; bottom: 1.2rem; right: 1.2rem;
+  width: 36px; height: 36px;
+  background: rgba(255,255,255,0.18); border: none;
+  border-radius: 50%; color: white; font-size: 1rem;
+  cursor: pointer; opacity: 0.4; transition: opacity 0.2s;
+  display: flex; align-items: center; justify-content: center;
+}
+.admin-toggle:hover { opacity: 1; }
+
+.admin-panel {
+  position: fixed; inset: 0;
+  background: rgba(0,0,0,0.6); backdrop-filter: blur(6px);
+  z-index: 200; display: none;
+  align-items: center; justify-content: center; padding: 1.5rem;
+}
+.admin-panel.open { display: flex; }
+.admin-inner {
+  background: white; border-radius: 1rem;
+  padding: 1.8rem; width: 100%; max-width: 480px;
+  box-shadow: 0 24px 60px rgba(0,0,0,0.25);
+}
+.admin-inner h3 { font-size: 1.1rem; font-weight: 700; color: #1f1235; margin-bottom: 1.2rem; }
+label { display: block; font-size: 0.82rem; font-weight: 600; color: #374151; margin-bottom: 0.4rem; }
+input[type="text"], select {
+  width: 100%; padding: 0.65rem 0.9rem;
+  border: 2px solid #e5e7eb; border-radius: 0.5rem;
+  font-family: 'Amiko', sans-serif; font-size: 0.9rem; color: #1f2937;
+  transition: border-color 0.2s; background: white; margin-bottom: 0.9rem;
+}
+input[type="text"]:focus, select:focus { outline: none; border-color: #9f669f; }
+.hint { font-size: 0.75rem; color: #6b7280; margin-top: -0.6rem; margin-bottom: 0.9rem; line-height: 1.5; }
+.admin-btns { display: flex; gap: 0.6rem; margin-top: 0.4rem; }
+.admin-btns button {
+  flex: 1; padding: 0.7rem; border: none; border-radius: 0.5rem;
+  font-family: 'Amiko', sans-serif; font-size: 0.88rem; font-weight: 600; cursor: pointer;
+}
+.btn-save { background: #9f669f; color: white; }
+.btn-save:hover { background: #8a569a; }
+.btn-cancel { background: #f3f4f6; color: #374151; }
+.btn-cancel:hover { background: #e5e7eb; }
+.admin-status { font-size: 0.8rem; margin-top: 0.8rem; padding: 0.5rem 0.8rem; border-radius: 0.4rem; display: none; }
+.admin-status.ok  { background: #d1fae5; color: #065f46; display: block; }
+.admin-status.err { background: #fee2e2; color: #991b1b; display: block; }
+
+/* ── Confetti ── */
+#confetti-canvas { position: fixed; inset: 0; pointer-events: none; z-index: 300; display: none; }
+
+/* ── Past winners toggle ── */
+.history-toggle {
+  width: 100%; margin-top: 0.5rem;
+  padding: 0.45rem; background: none; border: none;
+  color: rgba(255,255,255,0.55); font-family: 'Amiko', sans-serif;
+  font-size: 0.75rem; cursor: pointer; text-align: center;
+}
+.history-toggle:hover { color: rgba(255,255,255,0.85); }
+
+.history-box {
+  width: 100%; max-width: 560px;
+  background: rgba(255,255,255,0.15);
+  border-radius: 0.8rem; padding: 1rem 1.2rem;
+  margin-top: 0.5rem; display: none;
+}
+.history-box.open { display: block; }
+.history-item {
+  display: flex; justify-content: space-between;
+  font-size: 0.82rem; color: white; padding: 0.35rem 0;
+  border-bottom: 1px solid rgba(255,255,255,0.15);
+}
+.history-item:last-child { border-bottom: none; }
+.history-date { opacity: 0.65; font-size: 0.72rem; }
+.history-empty { color: rgba(255,255,255,0.6); font-size: 0.82rem; text-align: center; }
+
+/* ── Error state ── */
+#errorScreen {
+  position: fixed; inset: 0;
+  background: linear-gradient(135deg, #9f669f 0%, #7fbecf 60%, #83c6d8 100%);
+  display: none; flex-direction: column;
+  align-items: center; justify-content: center;
+  color: white; z-index: 100; padding: 2rem; text-align: center; gap: 1rem;
+}
+#errorScreen h2 { font-size: 1.4rem; }
+#errorScreen p  { opacity: 0.85; font-size: 0.9rem; max-width: 380px; line-height: 1.6; }
+#errorScreen button {
+  margin-top: 0.5rem; padding: 0.7rem 2rem; width: auto;
+  background: white; color: #9f669f;
+  border: none; border-radius: 0.6rem;
+  font-family: 'Amiko', sans-serif; font-weight: 700; font-size: 0.95rem; cursor: pointer;
+}
+</style>
+</head>
+<body>
+
+<canvas id="confetti-canvas"></canvas>
+
+<!-- Loading -->
+<div id="loadingScreen">
+  <div class="spinner-ring"></div>
+  <h2>Loading entries…</h2>
+  <p>Pulling names from Google Forms</p>
+</div>
+
+<!-- Error -->
+<div id="errorScreen">
+  <div style="font-size:3rem">⚠️</div>
+  <h2>Couldn't load entries</h2>
+  <p id="errorMsg">Make sure the Google Sheet is shared as "Anyone with the link → Viewer" and the URL is saved in settings.</p>
+  <button onclick="openAdmin()">⚙️ Open Settings</button>
+</div>
+
+<!-- Main UI -->
+<div class="header">
+  <h1>🏆 Prize Draw</h1>
+  <p id="eventSubtitle">Monthly Event Draw</p>
+</div>
+
+<div class="card">
+  <div class="stats-bar">
+    <div>
+      <div class="stat-val" id="entryCount">—</div>
+      <div class="stat-lbl">Entries</div>
+    </div>
+    <div style="text-align:right">
+      <div class="stat-val" id="monthLabel" style="font-size:1rem;color:#6b7280"></div>
+      <div class="stat-lbl">Tonight</div>
+    </div>
+  </div>
+
+  <div class="wheel-wrap">
+    <canvas id="wheelCanvas" width="500" height="500"></canvas>
+  </div>
+
+  <button class="btn-spin" id="spinBtn" onclick="spin()">🎡 SPIN THE WHEEL!</button>
+  <button class="btn-refresh" onclick="refreshEntries()">🔄 Refresh Entries</button>
+</div>
+
+<!-- Winner -->
+<div class="winner-card" id="winnerCard">
+  <div class="winner-icon">🏆</div>
+  <div class="winner-title">🎉 WINNER! 🎉</div>
+  <div class="winner-name" id="winnerName"></div>
+  <div class="winner-btns">
+    <button class="btn-winner" onclick="closeWinner(false)">Spin Again</button>
+    <button class="btn-winner solid" onclick="closeWinner(true)">Remove &amp; Done ✓</button>
+  </div>
+</div>
+
+<!-- Past winners -->
+<button class="history-toggle" onclick="toggleHistory()" id="historyBtn">▾ Past Winners</button>
+<div class="history-box" id="historyBox">
+  <div id="historyList"></div>
+</div>
+
+<!-- Hidden admin cog -->
+<button class="admin-toggle" onclick="openAdmin()" title="Settings">⚙️</button>
+
+<!-- Admin Panel -->
+<div class="admin-panel" id="adminPanel">
+  <div class="admin-inner">
+    <h3>⚙️ Draw Settings</h3>
+
+    <label>Event Name</label>
+    <input type="text" id="cfg-title" placeholder="Monthly Prize Draw">
+
+    <label>Google Sheet URL</label>
+    <input type="text" id="cfg-url" placeholder="https://docs.google.com/spreadsheets/d/…">
+    <p class="hint">Share the sheet as "Anyone with the link → Viewer" then paste the URL here. Set once, works every month.</p>
+
+    <label>Name Column</label>
+    <select id="cfg-col"></select>
+
+    <div class="admin-status" id="adminStatus"></div>
+
+    <div class="admin-btns">
+      <button class="btn-cancel" onclick="closeAdmin()">Cancel</button>
+      <button class="btn-save" onclick="saveAndReload()">💾 Save &amp; Load</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ── Config (persisted in localStorage) ────────────────────────────────────
+const CFG_KEY = 'draw_config';
+
+function loadCfg() {
+  try { return JSON.parse(localStorage.getItem(CFG_KEY) || '{}'); } catch(e) { return {}; }
+}
+function saveCfg(c) { localStorage.setItem(CFG_KEY, JSON.stringify(c)); }
+
+// ── State ──────────────────────────────────────────────────────────────────
+let entries = [];
+let columns = [];
+let rotation = 0;
+let isSpinning = false;
+let historyOpen = false;
+let cfg = loadCfg();
+
+const COLORS = ['#9f669f','#6fc6d3','#c490c4','#4ea8b6','#b87db8','#83c6d8','#7a4d7a','#5ab4c2'];
+
+// ── Boot ──────────────────────────────────────────────────────────────────
+window.addEventListener('DOMContentLoaded', () => {
+  // Set month label
+  document.getElementById('monthLabel').textContent =
+    new Date().toLocaleDateString('en-GB', { month: 'long', year: 'numeric' });
+
+  // Apply saved title
+  if (cfg.title) document.getElementById('eventSubtitle').textContent = cfg.title;
+
+  if (cfg.sheetUrl) {
+    autoLoad();
+  } else {
+    // First run — go straight to admin
+    hide('loadingScreen');
+    openAdmin();
+  }
+});
+
+// ── CSV helpers ───────────────────────────────────────────────────────────
+function parseCSVLine(line) {
+  const result = []; let cur = '', inQ = false;
+  for (let i = 0; i < line.length; i++) {
+    const ch = line[i], nx = line[i+1];
+    if (ch === '"') { if (inQ && nx === '"') { cur += '"'; i++; } else inQ = !inQ; }
+    else if (ch === ',' && !inQ) { result.push(cur.trim()); cur = ''; }
+    else cur += ch;
+  }
+  result.push(cur.trim());
+  return result;
+}
+
+function buildCsvUrl(raw) {
+  const m = raw.match(/\/d\/([a-zA-Z0-9-_]+)/);
+  if (!m) return raw; // already a CSV url or unknown format
+  const id = m[1];
+  const gid = (raw.match(/[#&?]gid=(\d+)/) || [])[1] || '0';
+  return `https://docs.google.com/spreadsheets/d/${id}/export?format=csv&id=${id}&gid=${gid}`;
+}
+
+// ── Fetch with CORS proxies ───────────────────────────────────────────────
+async function fetchCSV(rawUrl) {
+  const csv = buildCsvUrl(rawUrl);
+  const attempts = [
+    csv,
+    'https://corsproxy.io/?' + encodeURIComponent(csv),
+    'https://api.allorigins.win/raw?url=' + encodeURIComponent(csv),
+  ];
+  for (const url of attempts) {
+    try {
+      const r = await fetch(url);
+      if (r.ok) return await r.text();
+    } catch(e) {}
+  }
+  return null;
+}
+
+// ── Auto load on open ─────────────────────────────────────────────────────
+async function autoLoad() {
+  show('loadingScreen');
+  const text = await fetchCSV(cfg.sheetUrl);
+  hide('loadingScreen');
+
+  if (!text) {
+    showError('Could not reach the Google Sheet. Check the URL in Settings and make sure it\'s shared as "Anyone with the link → Viewer".');
+    return;
+  }
+
+  processCSV(text);
+}
+
+async function refreshEntries() {
+  if (!cfg.sheetUrl) { openAdmin(); return; }
+  document.getElementById('btn-refresh') && (document.getElementById('btn-refresh').textContent = '⏳ Refreshing…');
+  const text = await fetchCSV(cfg.sheetUrl);
+  if (!text) { alert('Could not refresh — check your connection.'); return; }
+  processCSV(text);
+}
+
+function processCSV(text) {
+  const lines = text.trim().split('\n');
+  if (lines.length < 2) { showError('The sheet appears to be empty. Make sure entries have come in via the form.'); return; }
+
+  const headers = parseCSVLine(lines[0]);
+  columns = headers;
+
+  // Populate admin column selector
+  const sel = document.getElementById('cfg-col');
+  sel.innerHTML = headers.map(h => `<option value="${h}">${h}</option>`).join('');
+  if (cfg.column && headers.includes(cfg.column)) sel.value = cfg.column;
+  else cfg.column = headers[0];
+
+  const colIdx = headers.indexOf(cfg.column || headers[0]);
+  entries = lines.slice(1)
+    .map(l => parseCSVLine(l)[colIdx])
+    .filter(n => n && n.trim().length > 0)
+    .map(n => n.trim());
+
+  document.getElementById('entryCount').textContent = entries.length;
+  hide('errorScreen');
+  drawWheel();
+}
+
+// ── Wheel ─────────────────────────────────────────────────────────────────
+function drawWheel() {
+  const canvas = document.getElementById('wheelCanvas');
+  const ctx = canvas.getContext('2d');
+  const cx = 250, cy = 250, r = 232;
+  ctx.clearRect(0, 0, 500, 500);
+  if (!entries.length) return;
+
+  const arc = (2 * Math.PI) / entries.length;
+
+  ctx.save();
+  ctx.translate(cx, cy);
+  ctx.rotate(rotation);
+  ctx.translate(-cx, -cy);
+
+  entries.forEach((name, i) => {
+    const start = i * arc - Math.PI / 2;
+    const end = start + arc;
+    const color = COLORS[i % COLORS.length];
+
+    ctx.beginPath();
+    ctx.moveTo(cx, cy);
+    ctx.arc(cx, cy, r, start, end);
+    ctx.closePath();
+    ctx.fillStyle = color;
+    ctx.fill();
+    ctx.strokeStyle = 'white';
+    ctx.lineWidth = 2;
+    ctx.stroke();
+
+    ctx.save();
+    ctx.translate(cx, cy);
+    ctx.rotate(start + arc / 2);
+    const maxW = r * 0.66;
+    const fontSize = Math.max(9, Math.min(14, 170 / Math.max(name.length, 4)));
+    ctx.font = `bold ${fontSize}px Amiko, sans-serif`;
+    ctx.fillStyle = 'white';
+    ctx.textAlign = 'right';
+    ctx.shadowColor = 'rgba(0,0,0,0.3)'; ctx.shadowBlur = 3;
+    let label = name;
+    while (ctx.measureText(label + '…').width > maxW && label.length > 2) label = label.slice(0,-1);
+    if (label !== name) label += '…';
+    ctx.fillText(label, r - 12, fontSize * 0.38);
+    ctx.restore();
+  });
+
+  // Hub
+  ctx.beginPath();
+  ctx.arc(cx, cy, 26, 0, Math.PI * 2);
+  ctx.fillStyle = 'white'; ctx.fill();
+  ctx.strokeStyle = '#e5e7eb'; ctx.lineWidth = 3; ctx.stroke();
+
+  ctx.restore();
+
+  // Fixed pointer
+  ctx.beginPath();
+  ctx.moveTo(cx, 10);
+  ctx.lineTo(cx - 13, 46);
+  ctx.lineTo(cx + 13, 46);
+  ctx.closePath();
+  ctx.fillStyle = '#9f669f';
+  ctx.shadowColor = 'rgba(159,102,159,0.6)'; ctx.shadowBlur = 10;
+  ctx.fill(); ctx.shadowBlur = 0;
+}
+
+// ── Spin ──────────────────────────────────────────────────────────────────
+function spin() {
+  if (!entries.length || isSpinning) return;
+  isSpinning = true;
+  document.getElementById('spinBtn').disabled = true;
+  document.getElementById('spinBtn').textContent = '⏳ SPINNING…';
+  document.getElementById('winnerCard').classList.remove('show');
+  stopConfetti();
+
+  const totalSpin = (6 + Math.random() * 4) * 2 * Math.PI + Math.random() * 2 * Math.PI;
+  const duration = 4500 + Math.random() * 1500;
+  const start = performance.now();
+  const startRot = rotation;
+
+  function ease(t) { return 1 - Math.pow(1 - t, 4); }
+
+  (function frame(now) {
+    const p = Math.min((now - start) / duration, 1);
+    rotation = startRot + totalSpin * ease(p);
+    drawWheel();
+    if (p < 1) requestAnimationFrame(frame);
+    else {
+      isSpinning = false;
+      document.getElementById('spinBtn').disabled = false;
+      document.getElementById('spinBtn').textContent = '🎡 SPIN THE WHEEL!';
+      revealWinner();
+    }
+  })(start);
+}
+
+function revealWinner() {
+  const n = entries.length;
+  const arc = (2 * Math.PI) / n;
+  const norm = ((-rotation % (2*Math.PI)) + 2*Math.PI) % (2*Math.PI);
+  const idx = Math.floor(norm / arc) % n;
+  const winner = entries[idx];
+
+  document.getElementById('winnerName').textContent = winner;
+  document.getElementById('winnerCard').classList.add('show');
+  document.getElementById('winnerCard').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+  addHistory(winner);
+  launchConfetti();
+}
+
+function closeWinner(remove) {
+  if (remove) {
+    const name = document.getElementById('winnerName').textContent;
+    entries = entries.filter(e => e !== name);
+    document.getElementById('entryCount').textContent = entries.length;
+    drawWheel();
+  }
+  document.getElementById('winnerCard').classList.remove('show');
+  stopConfetti();
+}
+
+// ── History ───────────────────────────────────────────────────────────────
+function getHistory() { try { return JSON.parse(localStorage.getItem('draw_history')||'[]'); } catch(e){ return []; } }
+function addHistory(name) {
+  const h = getHistory();
+  h.unshift({ name, date: new Date().toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric'}) });
+  localStorage.setItem('draw_history', JSON.stringify(h));
+  if (historyOpen) renderHistory();
+}
+function renderHistory() {
+  const h = getHistory();
+  document.getElementById('historyList').innerHTML = h.length
+    ? h.map(w=>`<div class="history-item"><span>${w.name}</span><span class="history-date">${w.date}</span></div>`).join('')
+    : '<p class="history-empty">No winners recorded yet.</p>';
+}
+function toggleHistory() {
+  historyOpen = !historyOpen;
+  document.getElementById('historyBox').classList.toggle('open', historyOpen);
+  document.getElementById('historyBtn').textContent = historyOpen ? '▴ Past Winners' : '▾ Past Winners';
+  if (historyOpen) renderHistory();
+}
+
+// ── Admin panel ───────────────────────────────────────────────────────────
+function openAdmin() {
+  document.getElementById('cfg-title').value = cfg.title || '';
+  document.getElementById('cfg-url').value   = cfg.sheetUrl || '';
+  const sel = document.getElementById('cfg-col');
+  if (columns.length) {
+    sel.innerHTML = columns.map(h=>`<option value="${h}">${h}</option>`).join('');
+    if (cfg.column) sel.value = cfg.column;
+  }
+  document.getElementById('adminStatus').className = 'admin-status';
+  document.getElementById('adminPanel').classList.add('open');
+}
+
+function closeAdmin() { document.getElementById('adminPanel').classList.remove('open'); }
+
+async function saveAndReload() {
+  const url = document.getElementById('cfg-url').value.trim();
+  if (!url) { adminStatus('err','Please enter a Google Sheet URL.'); return; }
+
+  cfg.title    = document.getElementById('cfg-title').value.trim() || 'Monthly Prize Draw';
+  cfg.sheetUrl = url;
+  cfg.column   = document.getElementById('cfg-col').value || '';
+  saveCfg(cfg);
+
+  document.getElementById('eventSubtitle').textContent = cfg.title;
+  adminStatus('ok','Saving…');
+
+  const text = await fetchCSV(url);
+  if (!text) { adminStatus('err','Could not reach the sheet. Check it\'s shared as "Anyone with the link → Viewer".'); return; }
+
+  processCSV(text);
+  adminStatus('ok', `✅ ${entries.length} entries loaded!`);
+  setTimeout(closeAdmin, 1200);
+}
+
+function adminStatus(type, msg) {
+  const el = document.getElementById('adminStatus');
+  el.textContent = msg;
+  el.className = 'admin-status ' + type;
+}
+
+// ── Confetti ──────────────────────────────────────────────────────────────
+let confettiRAF;
+const CC = ['#9f669f','#6fc6d3','#c490c4','#f5c842','#ffffff','#83c6d8'];
+
+function launchConfetti() {
+  const cv = document.getElementById('confetti-canvas');
+  cv.width = window.innerWidth; cv.height = window.innerHeight;
+  cv.style.display = 'block';
+  const ctx = cv.getContext('2d');
+  const pieces = Array.from({length:160}, () => ({
+    x: Math.random()*cv.width, y:-20-Math.random()*60,
+    r: 4+Math.random()*6,
+    color: CC[Math.floor(Math.random()*CC.length)],
+    vx:(Math.random()-.5)*5, vy:2+Math.random()*3,
+    spin:(Math.random()-.5)*.25, angle:Math.random()*Math.PI*2,
+    rect:Math.random()>.45
+  }));
+  let t0 = performance.now();
+  (function draw(now) {
+    ctx.clearRect(0,0,cv.width,cv.height);
+    let alive = false;
+    pieces.forEach(p => {
+      p.x+=p.vx; p.y+=p.vy; p.vy+=0.055; p.angle+=p.spin;
+      if(p.y < cv.height+20) alive=true;
+      ctx.save();
+      ctx.globalAlpha = Math.max(0, 1-p.y/cv.height);
+      ctx.translate(p.x,p.y); ctx.rotate(p.angle);
+      ctx.fillStyle = p.color;
+      if(p.rect) ctx.fillRect(-p.r,-p.r*.4,p.r*2,p.r*.8);
+      else { ctx.beginPath(); ctx.arc(0,0,p.r*.6,0,Math.PI*2); ctx.fill(); }
+      ctx.restore();
+    });
+    if(alive && now-t0 < 7000) confettiRAF = requestAnimationFrame(draw);
+    else stopConfetti();
+  })(t0);
+}
+function stopConfetti() {
+  cancelAnimationFrame(confettiRAF);
+  const cv = document.getElementById('confetti-canvas');
+  cv.getContext('2d').clearRect(0,0,cv.width,cv.height);
+  cv.style.display='none';
+}
+
+// ── Helpers ───────────────────────────────────────────────────────────────
+function show(id) { document.getElementById(id).style.display='flex'; }
+function hide(id) { document.getElementById(id).style.display='none'; }
+function showError(msg) {
+  document.getElementById('errorMsg').textContent = msg;
+  document.getElementById('errorScreen').style.display='flex';
+}
+</script>
+</body>
+</html>
