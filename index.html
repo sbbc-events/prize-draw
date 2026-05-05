@@ -121,42 +121,126 @@ body {
 }
 .btn-refresh:hover { background: rgba(111,198,211,0.22); }
 
-/* ── Winner card ── */
-.winner-card {
-  border-radius: 1rem;
-  background: linear-gradient(135deg, #9f669f 0%, #6fc6d3 100%);
-  box-shadow: 0 16px 40px rgba(159,102,159,0.4);
-  padding: 2rem;
-  text-align: center;
-  margin-top: 1.5rem;
-  width: 100%;
-  max-width: 560px;
+/* ── Winner OVERLAY modal ── */
+.winner-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(20, 0, 30, 0.65);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  z-index: 400;
   display: none;
-  animation: popIn 0.45s cubic-bezier(0.34,1.56,0.64,1);
+  align-items: center;
+  justify-content: center;
+  padding: 1.5rem;
 }
-.winner-card.show { display: block; }
-@keyframes popIn { from { transform: scale(0.8); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+.winner-overlay.show {
+  display: flex;
+  animation: fadeInOverlay 0.3s ease;
+}
+@keyframes fadeInOverlay {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
 
-.winner-icon  { font-size: 3.5rem; margin-bottom: 0.4rem; }
-.winner-title { font-size: 1.4rem; font-weight: 700; color: white; margin-bottom: 0.3rem; }
-.winner-name  {
-  font-size: clamp(2rem, 6vw, 3rem);
-  font-weight: 700; color: white;
-  line-height: 1.15; margin-bottom: 1.4rem;
+.winner-modal {
+  background: linear-gradient(145deg, #9f669f 0%, #6fc6d3 100%);
+  border-radius: 1.6rem;
+  box-shadow: 0 32px 80px rgba(0,0,0,0.45), 0 0 0 1px rgba(255,255,255,0.15);
+  padding: 3rem 2.5rem 2.5rem;
+  text-align: center;
+  width: 100%;
+  max-width: 480px;
+  position: relative;
+  animation: popIn 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+@keyframes popIn {
+  from { transform: scale(0.7) translateY(40px); opacity: 0; }
+  to   { transform: scale(1) translateY(0);      opacity: 1; }
+}
+
+.winner-modal::before {
+  content: '';
+  position: absolute;
+  inset: -2px;
+  border-radius: 1.7rem;
+  background: linear-gradient(135deg, rgba(255,255,255,0.4), rgba(255,255,255,0.05));
+  z-index: -1;
+}
+
+.winner-icon  {
+  font-size: 4.5rem;
+  margin-bottom: 0.5rem;
+  display: block;
+  animation: trophyBounce 0.6s cubic-bezier(0.34,1.56,0.64,1) 0.3s both;
+}
+@keyframes trophyBounce {
+  from { transform: scale(0.5) rotate(-15deg); opacity: 0; }
+  to   { transform: scale(1) rotate(0deg);     opacity: 1; }
+}
+
+.winner-title {
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: rgba(255,255,255,0.85);
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  margin-bottom: 0.8rem;
+}
+
+.winner-name {
+  font-size: clamp(2.2rem, 7vw, 3.4rem);
+  font-weight: 700;
+  color: white;
+  line-height: 1.15;
+  margin-bottom: 0.5rem;
   word-break: break-word;
+  text-shadow: 0 2px 20px rgba(0,0,0,0.2);
+  animation: nameReveal 0.5s cubic-bezier(0.34,1.56,0.64,1) 0.45s both;
 }
-.winner-btns { display: flex; gap: 0.6rem; }
+@keyframes nameReveal {
+  from { transform: scale(0.8) translateY(10px); opacity: 0; }
+  to   { transform: scale(1) translateY(0);      opacity: 1; }
+}
+
+.winner-divider {
+  width: 60px;
+  height: 3px;
+  background: rgba(255,255,255,0.4);
+  border-radius: 2px;
+  margin: 1.2rem auto 1.6rem;
+}
+
+.winner-btns {
+  display: flex;
+  gap: 0.75rem;
+}
 .btn-winner {
-  flex: 1; padding: 0.7rem;
-  background: rgba(255,255,255,0.22);
-  border: 2px solid rgba(255,255,255,0.5);
-  color: white; border-radius: 0.5rem;
-  font-family: 'Amiko', sans-serif; font-size: 0.88rem; font-weight: 600;
-  cursor: pointer; transition: background 0.18s;
+  flex: 1;
+  padding: 0.85rem;
+  background: rgba(255,255,255,0.18);
+  border: 2px solid rgba(255,255,255,0.4);
+  color: white;
+  border-radius: 0.7rem;
+  font-family: 'Amiko', sans-serif;
+  font-size: 0.92rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.18s;
 }
-.btn-winner:hover { background: rgba(255,255,255,0.35); }
-.btn-winner.solid { background: white; color: #9f669f; border-color: white; }
-.btn-winner.solid:hover { background: #f0e8f4; }
+.btn-winner:hover {
+  background: rgba(255,255,255,0.28);
+  transform: translateY(-1px);
+}
+.btn-winner.solid {
+  background: white;
+  color: #9f669f;
+  border-color: white;
+}
+.btn-winner.solid:hover {
+  background: #f0e8f4;
+  transform: translateY(-1px);
+}
 
 /* ── Admin panel (hidden cog) ── */
 .admin-toggle {
@@ -205,7 +289,7 @@ input[type="text"]:focus, select:focus { outline: none; border-color: #9f669f; }
 .admin-status.err { background: #fee2e2; color: #991b1b; display: block; }
 
 /* ── Confetti ── */
-#confetti-canvas { position: fixed; inset: 0; pointer-events: none; z-index: 300; display: none; }
+#confetti-canvas { position: fixed; inset: 0; pointer-events: none; z-index: 500; display: none; }
 
 /* ── Past winners toggle ── */
 .history-toggle {
@@ -295,17 +379,6 @@ input[type="text"]:focus, select:focus { outline: none; border-color: #9f669f; }
   <button class="btn-refresh" onclick="refreshEntries()">🔄 Refresh Entries</button>
 </div>
 
-<!-- Winner -->
-<div class="winner-card" id="winnerCard">
-  <div class="winner-icon">🏆</div>
-  <div class="winner-title">🎉 WINNER! 🎉</div>
-  <div class="winner-name" id="winnerName"></div>
-  <div class="winner-btns">
-    <button class="btn-winner" onclick="closeWinner(false)">Spin Again</button>
-    <button class="btn-winner solid" onclick="closeWinner(true)">Remove &amp; Done ✓</button>
-  </div>
-</div>
-
 <!-- Past winners -->
 <button class="history-toggle" onclick="toggleHistory()" id="historyBtn">▾ Past Winners</button>
 <div class="history-box" id="historyBox">
@@ -314,6 +387,20 @@ input[type="text"]:focus, select:focus { outline: none; border-color: #9f669f; }
 
 <!-- Hidden admin cog -->
 <button class="admin-toggle" onclick="openAdmin()" title="Settings">⚙️</button>
+
+<!-- ── Winner OVERLAY ── -->
+<div class="winner-overlay" id="winnerOverlay">
+  <div class="winner-modal">
+    <span class="winner-icon">🏆</span>
+    <div class="winner-title">🎉 We have a winner! 🎉</div>
+    <div class="winner-name" id="winnerName"></div>
+    <div class="winner-divider"></div>
+    <div class="winner-btns">
+      <button class="btn-winner" onclick="closeWinner(false)">Spin Again</button>
+      <button class="btn-winner solid" onclick="closeWinner(true)">Remove &amp; Done ✓</button>
+    </div>
+  </div>
+</div>
 
 <!-- Admin Panel -->
 <div class="admin-panel" id="adminPanel">
@@ -360,17 +447,14 @@ const COLORS = ['#9f669f','#6fc6d3','#c490c4','#4ea8b6','#b87db8','#83c6d8','#7a
 
 // ── Boot ──────────────────────────────────────────────────────────────────
 window.addEventListener('DOMContentLoaded', () => {
-  // Set month label
   document.getElementById('monthLabel').textContent =
     new Date().toLocaleDateString('en-GB', { month: 'long', year: 'numeric' });
 
-  // Apply saved title
   if (cfg.title) document.getElementById('eventSubtitle').textContent = cfg.title;
 
   if (cfg.sheetUrl) {
     autoLoad();
   } else {
-    // First run — go straight to admin
     hide('loadingScreen');
     openAdmin();
   }
@@ -391,7 +475,7 @@ function parseCSVLine(line) {
 
 function buildCsvUrl(raw) {
   const m = raw.match(/\/d\/([a-zA-Z0-9-_]+)/);
-  if (!m) return raw; // already a CSV url or unknown format
+  if (!m) return raw;
   const id = m[1];
   const gid = (raw.match(/[#&?]gid=(\d+)/) || [])[1] || '0';
   return `https://docs.google.com/spreadsheets/d/${id}/export?format=csv&id=${id}&gid=${gid}`;
@@ -430,7 +514,6 @@ async function autoLoad() {
 
 async function refreshEntries() {
   if (!cfg.sheetUrl) { openAdmin(); return; }
-  document.getElementById('btn-refresh') && (document.getElementById('btn-refresh').textContent = '⏳ Refreshing…');
   const text = await fetchCSV(cfg.sheetUrl);
   if (!text) { alert('Could not refresh — check your connection.'); return; }
   processCSV(text);
@@ -438,12 +521,11 @@ async function refreshEntries() {
 
 function processCSV(text) {
   const lines = text.trim().split('\n');
-  if (lines.length < 2) { showError('The sheet appears to be empty. Make sure entries have come in via the form.'); return; }
+  if (lines.length < 2) { showError('The sheet appears to be empty.'); return; }
 
   const headers = parseCSVLine(lines[0]);
   columns = headers;
 
-  // Populate admin column selector
   const sel = document.getElementById('cfg-col');
   sel.innerHTML = headers.map(h => `<option value="${h}">${h}</option>`).join('');
   if (cfg.column && headers.includes(cfg.column)) sel.value = cfg.column;
@@ -531,7 +613,7 @@ function spin() {
   isSpinning = true;
   document.getElementById('spinBtn').disabled = true;
   document.getElementById('spinBtn').textContent = '⏳ SPINNING…';
-  document.getElementById('winnerCard').classList.remove('show');
+  closeWinnerOverlay();
   stopConfetti();
 
   const totalSpin = (6 + Math.random() * 4) * 2 * Math.PI + Math.random() * 2 * Math.PI;
@@ -563,10 +645,13 @@ function revealWinner() {
   const winner = entries[idx];
 
   document.getElementById('winnerName').textContent = winner;
-  document.getElementById('winnerCard').classList.add('show');
-  document.getElementById('winnerCard').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+  document.getElementById('winnerOverlay').classList.add('show');
   addHistory(winner);
   launchConfetti();
+}
+
+function closeWinnerOverlay() {
+  document.getElementById('winnerOverlay').classList.remove('show');
 }
 
 function closeWinner(remove) {
@@ -576,7 +661,7 @@ function closeWinner(remove) {
     document.getElementById('entryCount').textContent = entries.length;
     drawWheel();
   }
-  document.getElementById('winnerCard').classList.remove('show');
+  closeWinnerOverlay();
   stopConfetti();
 }
 
